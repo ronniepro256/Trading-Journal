@@ -1,0 +1,22 @@
+_# Ignore python virtual environment system folders
+venv/
+__pycache__/
+.streamlit/
+bin/
+lib/
+lib64/
+include/
+etc/
+share/
+pyvenv.cfg
+
+# Ignore streamlit local secrets
+.streamlit/
+secrets.toml
+
+# Ignore database and environment backups
+data/
+*.db
+*.sqlite
+.env
+.DS_Store
