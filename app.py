@@ -205,22 +205,39 @@ html, body, [class*="css"] {{
 
 # ─── Database ──────────────────────────────────────────────────────────────────
 
-@st.cache_resource
+import psycopg2
+from psycopg2 import extras
+import streamlit as st
+
+
 def get_connection():
-    """Connect to Supabase PostgreSQL using Streamlit secrets."""
+    """Establishes a connection to the PostgreSQL database, verifying it is active."""
+    # Check if connection already exists in Streamlit session state
+    if 'db_conn' in st.session_state and st.session_state.db_conn is not None:
+        try:
+            # Test if the connection is still alive
+            with st.session_state.db_conn.cursor() as tmp_curr:
+                tmp_curr.execute("SELECT 1;")
+            return st.session_state.db_conn
+        except (psycopg2.InterfaceError, psycopg2.OperationalError):
+            # If it's dead, clear it out so we can establish a fresh one
+            st.session_state.db_conn = None
+
+    # Connect to the database using your Streamlit secrets
     try:
         conn = psycopg2.connect(
             host=st.secrets["DB_HOST"],
             database=st.secrets["DB_NAME"],
             user=st.secrets["DB_USER"],
             password=st.secrets["DB_PASSWORD"],
-            port=st.secrets.get("DB_PORT", 5432),
+            port=int(st.secrets["DB_PORT"])
         )
+        # Store it globally in session state so it persists across button clicks
+        st.session_state.db_conn = conn
         return conn
     except Exception as e:
         st.error(f"Database connection failed: {e}")
-        st.info("Ensure your Streamlit Secrets are configured correctly.")
-        st.stop()
+        raise e
 
 
 def get_cursor():
