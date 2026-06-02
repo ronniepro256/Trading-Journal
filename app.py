@@ -1067,7 +1067,7 @@ def main():
         "🔬  Advanced Analytics",
     ])
 
-   # ── Overview ──────────────────────────────────────────────────────
+    # ── Overview ──────────────────────────────────────────────────────
     with tab_ov:
         render_kpis(compute_summary(closed_filtered))
         if closed_filtered.empty:
@@ -1078,11 +1078,23 @@ def main():
             c2.plotly_chart(chart_drawdown(closed_filtered), width="stretch")
             
             c3, c4 = st.columns(2)
-           
             c3.plotly_chart(chart_rolling_winrate(closed_filtered), width="stretch")
-            # ADDED THE key PARAMETER HERE:
             c4.plotly_chart(chart_r_histogram(closed_filtered), width="stretch", key="overview_r_hist")
           
+    # ── Log Trade (ADDED & FIXED) ─────────────────────────────────────
+    with tab_log:
+        # Render the input form layout for setting up new entries
+        trade_logged = tab_log_trade(all_trades)
+        
+        st.markdown("<br><hr>", unsafe_allow_html=True)
+        
+        # Render the close/modification systems for open risk underneath
+        trade_closed = tab_update_open(all_trades)
+        
+        # If either database submission routine succeeds, sync app state immediately
+        if trade_logged or trade_closed:
+            st.rerun()
+
     # ── Trade History ─────────────────────────────────────────────────
     with tab_hist:
         st.markdown('<div class="section-header">Your Trade History</div>',
