@@ -691,7 +691,7 @@ def styled_trade_table(df: pd.DataFrame) -> None:
 
 # ─── Filters ───────────────────────────────────────────────────────────────────
 
-def apply_filters(trades: pd.DataFrame) -> pd.DataFrame:
+def apply_filters(trades: pd.DataFrame, key_suffix: str = "") -> pd.DataFrame:
     if trades.empty:
         return trades
 
@@ -699,19 +699,29 @@ def apply_filters(trades: pd.DataFrame) -> pd.DataFrame:
         st.markdown(f"### Filters")
         min_d = trades["trade_date"].min().date()
         max_d = trades["trade_date"].max().date()
-        date_range = st.date_input("Date range", value=(min_d, max_d),
-                                   min_value=min_d, max_value=max_d)
+        
+        # Unique key added to date input
+        date_range = st.date_input(
+            "Date range", 
+            value=(min_d, max_d),
+            min_value=min_d, 
+            max_value=max_d,
+            key=f"date_range_{key_suffix}"
+        )
 
         symbols = sorted(trades["symbol"].dropna().unique().tolist())
         sessions = sorted([s for s in trades["session"].dropna().unique() if s])
         strategies = sorted([s for s in trades["strategy"].dropna().unique() if s])
 
-        sel_sym = st.multiselect("Symbol", symbols, default=symbols)
-        sel_ses = st.multiselect("Session", sessions, default=sessions)
-        sel_str = st.multiselect("Strategy", strategies, default=strategies)
+        # Unique keys added to multiselects
+        sel_sym = st.multiselect("Symbol", symbols, default=symbols, key=f"symbol_{key_suffix}")
+        sel_ses = st.multiselect("Session", sessions, default=sessions, key=f"session_{key_suffix}")
+        sel_str = st.multiselect("Strategy", strategies, default=strategies, key=f"strategy_{key_suffix}")
 
         st.divider()
-        if st.button("🗑 Delete ALL trades", type="secondary"):
+        
+        # Unique key added to the dangerous mutation button
+        if st.button("🗑 Delete ALL trades", type="secondary", key=f"delete_all_{key_suffix}"):
             conn, cursor = get_cursor()
             try:
                 cursor.execute("DELETE FROM trades")
@@ -737,7 +747,6 @@ def apply_filters(trades: pd.DataFrame) -> pd.DataFrame:
     if sel_str:
         filtered = filtered[filtered["strategy"].isin(sel_str)]
     return filtered
-
 
 # ─── Banner ────────────────────────────────────────────────────────────────────
 
@@ -1040,11 +1049,14 @@ def main():
             st.info("No closed trades yet. Head to **Log Trade** to add your first trade.")
         else:
             c1, c2 = st.columns(2)
-            c1.plotly_chart(chart_equity(closed_filtered),   use_container_width=True)
-            c2.plotly_chart(chart_drawdown(closed_filtered), use_container_width=True)
+            # Updated deprecated layout parameters to width="stretch"
+            c1.plotly_chart(chart_equity(closed_filtered),   width="stretch")
+            c2.plotly_chart(chart_drawdown(closed_filtered), width="stretch")
+            
             c3, c4 = st.columns(2)
-            c3.plotly_chart(chart_rolling_wr(closed_filtered), use_container_width=True)
-            c4.plotly_chart(chart_r_hist(closed_filtered),     use_container_width=True)
+            # FIXED: NameError resolved from chart_rolling_wr -> chart_rolling_winrate
+            c3.plotly_chart(chart_rolling_winrate(closed_filtered), width="stretch")
+            c4.plotly_chart(chart_r_hist(closed_filtered),   width="stretch")
 
     # ── Log Trade ─────────────────────────────────────────────────────
     with tab_log:
