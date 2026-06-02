@@ -626,11 +626,18 @@ def chart_monthly_heatmap(closed: pd.DataFrame) -> go.Figure:
         showscale=True,
         colorbar=dict(title="PnL", tickfont=dict(color=TEXT)),
     ))
-    fig.update_layout(title="Monthly Performance Heat-Map", **CHART_LAYOUT,
-                      xaxis=dict(side="top"), yaxis=dict(autorange="reversed"))
+
+    # FIX: Step 1 - Ingest your default global dashboard styles first
+    fig.update_layout(**CHART_LAYOUT)
+    
+    # FIX: Step 2 - Layer on the layout structural changes required specifically for the heatmap
+    fig.update_layout(
+        title="Monthly Performance Heat-Map",
+        xaxis=dict(side="top"),
+        yaxis=dict(autorange="reversed")
+    )
+    
     return fig
-
-
 # ─── Trade table with colour coding ───────────────────────────────────────────
 
 def styled_trade_table(df: pd.DataFrame) -> None:
