@@ -1042,32 +1042,21 @@ def main():
         "🔬  Advanced Analytics",
     ])
 
-    # ── Overview ──────────────────────────────────────────────────────
+   # ── Overview ──────────────────────────────────────────────────────
     with tab_ov:
         render_kpis(compute_summary(closed_filtered))
         if closed_filtered.empty:
             st.info("No closed trades yet. Head to **Log Trade** to add your first trade.")
         else:
             c1, c2 = st.columns(2)
-            # Updated deprecated layout parameters to width="stretch"
             c1.plotly_chart(chart_equity(closed_filtered),   width="stretch")
             c2.plotly_chart(chart_drawdown(closed_filtered), width="stretch")
             
             c3, c4 = st.columns(2)
-            # FIXED: NameError resolved from chart_rolling_wr -> chart_rolling_winrate
             c3.plotly_chart(chart_rolling_winrate(closed_filtered), width="stretch")
-            c4.plotly_chart(chart_r_hist(closed_filtered),   width="stretch")
-
-    # ── Log Trade ─────────────────────────────────────────────────────
-    with tab_log:
-        saved = tab_log_trade(all_trades)
-        if saved:
-            all_trades = load_trades()
-        st.divider()
-        updated = tab_update_open(all_trades)
-        if updated:
-            all_trades = load_trades()
-
+            # FIXED: NameError resolved from chart_r_hist -> chart_r_histogram
+            c4.plotly_chart(chart_r_histogram(closed_filtered),     width="stretch")
+          
     # ── Trade History ─────────────────────────────────────────────────
     with tab_hist:
         st.markdown('<div class="section-header">Your Trade History</div>',
