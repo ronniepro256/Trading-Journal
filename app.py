@@ -1025,6 +1025,22 @@ def tab_advanced(closed: pd.DataFrame) -> None:
     ca.plotly_chart(chart_session_pnl(closed), width="stretch", key="adv_session_pnl")
     cb.plotly_chart(chart_strategy_pnl(closed), width="stretch", key="adv_strategy_pnl")
 
+def export_csv_button(df: pd.DataFrame) -> None:
+    if df.empty:
+        st.info("No trades available to export.")
+        return
+        
+    # Convert the filtered DataFrame to standard UTF-8 CSV bytes
+    csv_data = df.to_csv(index=False).encode("utf-8")
+    
+    st.download_button(
+        label="📥 Download Trades as CSV",
+        data=csv_data,
+        file_name="trading_journal_export.csv",
+        mime="text/csv",
+        key="global_csv_download"
+    )
+
 
 # ─── Main ──────────────────────────────────────────────────────────────────────
 def main():
