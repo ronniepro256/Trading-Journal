@@ -1009,18 +1009,22 @@ def tab_advanced(closed: pd.DataFrame) -> None:
 
 
 # ─── Main ──────────────────────────────────────────────────────────────────────
-
-def main() -> None:
-    st.set_page_config(page_title=APP_TITLE, layout="wide", page_icon="📊",
-                       initial_sidebar_state="collapsed")
+def main():
+    st.set_page_config(page_title=APP_TITLE, layout="wide",
+                       page_icon="📊", initial_sidebar_state="collapsed")
     initialize_db()
-    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
     all_trades = load_trades()
-    closed_all = all_trades[all_trades["status"] == "Closed"] if not all_trades.empty else pd.DataFrame()
-    summary = compute_summary(closed_all)
+    closed_all = (all_trades[all_trades["status"] == "Closed"]
+                  if not all_trades.empty else pd.DataFrame())
 
-    render_banner(summary)
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+    render_banner(compute_summary(closed_all))
+
+    # ── Apply filters ONCE here — sidebar widgets created only once ──
+    filtered = apply_filters(all_trades) if not all_trades.empty else all_trades
+    closed_filtered = (filtered[filtered["status"] == "Closed"]
+                       if not filtered.empty else pd.DataFrame())
 
     tab_ov, tab_log, tab_hist, tab_adv = st.tabs([
         "📊  Overview",
@@ -1029,45 +1033,41 @@ def main() -> None:
         "🔬  Advanced Analytics",
     ])
 
-    # ── Overview ──────────────────────────────────────────────────────────────
+    # ── Overview ──────────────────────────────────────────────────────
     with tab_ov:
-        filtered = apply_filters(all_trades)
-        closed_f = filtered[filtered["status"] == "Closed"] if not filtered.empty else pd.DataFrame()
-        sum_f = compute_summary(closed_f)
-        render_kpis(sum_f)
-
-        if closed_f.empty:
+        render_kpis(compute_summary(closed_filtered))
+        if closed_filtered.empty:
             st.info("No closed trades yet. Head to **Log Trade** to add your first trade.")
         else:
-            r1c1, r1c2 = st.columns(2)
-            r1c1.plotly_chart(chart_equity(closed_f), use_container_width=True)
-            r1c2.plotly_chart(chart_drawdown(closed_f), use_container_width=True)
+            c1, c2 = st.columns(2)
+            c1.plotly_chart(chart_equity(closed_filtered),   use_container_width=True)
+            c2.plotly_chart(chart_drawdown(closed_filtered), use_container_width=True)
+            c3, c4 = st.columns(2)
+            c3.plotly_chart(chart_rolling_wr(closed_filtered), use_container_width=True)
+            c4.plotly_chart(chart_r_hist(closed_filtered),     use_container_width=True)
 
-            r2c1, r2c2 = st.columns(2)
-            r2c1.plotly_chart(chart_rolling_winrate(closed_f), use_container_width=True)
-            r2c2.plotly_chart(chart_r_histogram(closed_f), use_container_width=True)
-
-    # ── Log Trade ─────────────────────────────────────────────────────────────
+    # ── Log Trade ─────────────────────────────────────────────────────
     with tab_log:
-        refreshed = tab_log_trade(all_trades)
-        if refreshed:
+        saved = tab_log_trade(all_trades)
+        if saved:
             all_trades = load_trades()
         st.divider()
         updated = tab_update_open(all_trades)
         if updated:
             all_trades = load_trades()
 
-    # ── Trade History ─────────────────────────────────────────────────────────
+    # ── Trade History ─────────────────────────────────────────────────
     with tab_hist:
-        filtered_hist = apply_filters(all_trades) if not all_trades.empty else all_trades
-        st.markdown('<div class="section-header">All Trades</div>', unsafe_allow_html=True)
-        styled_trade_table(filtered_hist)
+        st.markdown('<div class="section-header">Your Trade History</div>',
+                    unsafe_allow_html=True)
+        styled_trade_table(filtered)
 
-    # ── Advanced Analytics ────────────────────────────────────────────────────
+    # ── Advanced Analytics ────────────────────────────────────────────
     with tab_adv:
-        filtered_adv = apply_filters(all_trades) if not all_trades.empty else all_trades
-        closed_adv = filtered_adv[filtered_adv["status"] == "Closed"] if not filtered_adv.empty else pd.DataFrame()
-        tab_advanced(closed_adv)
+        tab_advanced(closed_filtered)
+        st.markdown('<div class="section-header">Export</div>',
+                    unsafe_allow_html=True)
+        export_csv_button(filtered)
 
 
 if __name__ == "__main__":
