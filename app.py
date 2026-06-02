@@ -975,7 +975,6 @@ def tab_update_open(all_trades: pd.DataFrame) -> bool:
         st.error(str(exc))
         return False
 
-
 # ─── Advanced analytics tab ────────────────────────────────────────────────────
 
 def tab_advanced(closed: pd.DataFrame) -> None:
@@ -1006,15 +1005,18 @@ def tab_advanced(closed: pd.DataFrame) -> None:
                      use_container_width=True, hide_index=True)
 
     st.markdown('<div class="section-header">R-Multiple Distribution</div>', unsafe_allow_html=True)
-    st.plotly_chart(chart_r_histogram(closed), use_container_width=True)
+    # ADDED: width="stretch" and explicit unique key
+    st.plotly_chart(chart_r_histogram(closed), width="stretch", key="adv_r_histogram")
 
     st.markdown('<div class="section-header">Monthly Performance Heat-Map</div>', unsafe_allow_html=True)
-    st.plotly_chart(chart_monthly_heatmap(closed), use_container_width=True)
+    # ADDED: width="stretch" and explicit unique key
+    st.plotly_chart(chart_monthly_heatmap(closed), width="stretch", key="adv_monthly_heatmap")
 
     st.markdown('<div class="section-header">Session & Strategy Breakdown</div>', unsafe_allow_html=True)
     ca, cb = st.columns(2)
-    ca.plotly_chart(chart_session_pnl(closed), use_container_width=True)
-    cb.plotly_chart(chart_strategy_pnl(closed), use_container_width=True)
+    # ADDED: width="stretch" and explicit unique keys for side-by-side columns
+    ca.plotly_chart(chart_session_pnl(closed), width="stretch", key="adv_session_pnl")
+    cb.plotly_chart(chart_strategy_pnl(closed), width="stretch", key="adv_strategy_pnl")
 
 
 # ─── Main ──────────────────────────────────────────────────────────────────────
@@ -1053,9 +1055,10 @@ def main():
             c2.plotly_chart(chart_drawdown(closed_filtered), width="stretch")
             
             c3, c4 = st.columns(2)
+           
             c3.plotly_chart(chart_rolling_winrate(closed_filtered), width="stretch")
-            # FIXED: NameError resolved from chart_r_hist -> chart_r_histogram
-            c4.plotly_chart(chart_r_histogram(closed_filtered),     width="stretch")
+            # ADDED THE key PARAMETER HERE:
+            c4.plotly_chart(chart_r_histogram(closed_filtered), width="stretch", key="overview_r_hist")
           
     # ── Trade History ─────────────────────────────────────────────────
     with tab_hist:
