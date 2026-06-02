@@ -670,8 +670,8 @@ def styled_trade_table(df: pd.DataFrame) -> None:
     styled = (
         display.style
         .apply(row_colour, axis=1)
-        .applymap(r_colour, subset=["r_multiple"])
-        .applymap(pnl_colour, subset=["net_pnl"])
+        .map(r_colour, subset=["r_multiple"])
+        .map(pnl_colour, subset=["net_pnl"])
         .format({
             "entry_price": "{:.5f}",
             "exit_price": "{:.5f}",
